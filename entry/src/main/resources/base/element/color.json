@@ -1,0 +1,44 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "calculator_background",
+      "value": "#1E1E1E"
+    },
+    {
+      "name": "display_background",
+      "value": "#000000"
+    },
+    {
+      "name": "display_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "number_button",
+      "value": "#333333"
+    },
+    {
+      "name": "number_button_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "operator_button",
+      "value": "#FF9500"
+    },
+    {
+      "name": "operator_button_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "function_button",
+      "value": "#A6A6A6"
+    },
+    {
+      "name": "function_button_text",
+      "value": "#000000"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HiCalculator Module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Calculator Application"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HiCalculator"
+    }
+  ]
+}
