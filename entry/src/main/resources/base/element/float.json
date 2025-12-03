@@ -15,6 +15,10 @@
     {
       "name": "button_corner_radius",
       "value": "40fp"
+    },
+    {
+      "name": "expression_font_size",
+      "value": "16fp"
     }
   ]
 }

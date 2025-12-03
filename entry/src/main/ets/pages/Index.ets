@@ -1,11 +1,17 @@
+import { Complex, ComplexCalculator } from '../utils/Complex'
+import { ExpressionEvaluator } from '../utils/ExpressionEvaluator'
+
 @Entry
 @Component
 struct Index {
   @State displayValue: string = '0'
-  @State firstOperand: number = 0
+  @State firstOperand: Complex = { real: 0, imag: 0 }
   @State operator: string = ''
   @State waitingForSecondOperand: boolean = false
   @State hasError: boolean = false
+  @State mode: 'real' | 'complex' = 'real' // 计算器模式：实数或复数
+  @State expression: string = '' // 当前表达式
+  @State showExpression: boolean = false // 是否显示表达式
 
   // 数字按钮点击处理
   handleNumberInput(number: string): void {
@@ -13,7 +19,8 @@ struct Index {
       this.handleClear()
     }
 
-    if (this.waitingForSecondOperand) {
+    // 如果之前是运算符，开始新的操作数
+    if (this.waitingForSecondOperand || this.expression !== '') {
       this.displayValue = number
       this.waitingForSecondOperand = false
     } else {
@@ -23,42 +30,60 @@ struct Index {
       }
     }
   }
+
   // 运算符按钮点击处理
   handleOperator(nextOperator: string): void {
     if (this.hasError) {
       return
     }
 
-    const inputValue = parseFloat(this.displayValue)
-
-    if (this.firstOperand === 0) {
-      this.firstOperand = inputValue
-    } else if (this.operator) {
-      const result = this.performCalculation()
-      if (this.hasError) {
-        return
-      }
-      this.displayValue = this.formatNumber(result)
-      this.firstOperand = result
+    // 将当前值添加到表达式
+    if (this.displayValue) {
+      this.expression += this.displayValue + ' ' + nextOperator + ' '
     }
 
     this.waitingForSecondOperand = true
     this.operator = nextOperator
+    this.showExpression = true
   }
 
-  // 执行计算
+  // 执行复数计算
+  performComplexCalculation(): Complex {
+    const inputValue = ComplexCalculator.parse(this.displayValue)
+
+    try {
+      switch (this.operator) {
+        case '+':
+          return ComplexCalculator.add(this.firstOperand, inputValue)
+        case '-':
+          return ComplexCalculator.subtract(this.firstOperand, inputValue)
+        case '×':
+          return ComplexCalculator.multiply(this.firstOperand, inputValue)
+        case '÷':
+          return ComplexCalculator.divide(this.firstOperand, inputValue)
+        default:
+          return inputValue
+      }
+    } catch (error) {
+      // 捕获除零错误
+      this.showError()
+      return { real: 0, imag: 0 }
+    }
+  }
+
+  // 执行计算（兼容旧代码）
   performCalculation(): number {
     const inputValue = parseFloat(this.displayValue)
 
     switch (this.operator) {
       case '+':
-        return this.addNumbers(this.firstOperand, inputValue)
+        return this.addNumbers(this.firstOperand.real, inputValue)
       case '-':
-        return this.subtractNumbers(this.firstOperand, inputValue)
+        return this.subtractNumbers(this.firstOperand.real, inputValue)
       case '×':
-        return this.multiplyNumbers(this.firstOperand, inputValue)
+        return this.multiplyNumbers(this.firstOperand.real, inputValue)
       case '÷':
-        return this.divideNumbers(this.firstOperand, inputValue)
+        return this.divideNumbers(this.firstOperand.real, inputValue)
       default:
         return inputValue
     }
@@ -158,31 +183,52 @@ struct Index {
 
     return str
   }
+
   // 等号按钮点击处理
   handleEquals(): void {
     if (this.hasError) {
       return
     }
 
-    if (this.operator && !this.waitingForSecondOperand) {
-      const result = this.performCalculation()
+    // 如果有累积的表达式，使用表达式求值器计算
+    if (this.expression !== '') {
+      // 将当前显示的数值添加到表达式末尾
+      const fullExpr = this.expression + this.displayValue
+
+      try {
+        // 使用表达式求值器计算结果
+        this.displayValue = ExpressionEvaluator.formatResult(fullExpr)
+        // 清空表达式，准备下一轮计算
+        this.expression = ''
+        this.showExpression = false
+        this.waitingForSecondOperand = true
+      } catch (error) {
+        this.showError()
+      }
+    } else if (this.operator && !this.waitingForSecondOperand) {
+      // 兼容旧的两操作数模式
+      const result = this.performComplexCalculation()
       if (this.hasError) {
         return
       }
-      this.displayValue = this.formatNumber(result)
-      this.firstOperand = 0
+      this.displayValue = ComplexCalculator.format(result)
+      this.firstOperand = { real: 0, imag: 0 }
       this.operator = ''
       this.waitingForSecondOperand = true
     }
   }
+
   // 清除按钮点击处理
   handleClear(): void {
     this.displayValue = '0'
-    this.firstOperand = 0
+    this.firstOperand = { real: 0, imag: 0 }
     this.operator = ''
     this.waitingForSecondOperand = false
     this.hasError = false
+    this.expression = ''
+    this.showExpression = false
   }
+
   // 小数点按钮点击处理
   handleDecimal(): void {
     if (this.hasError) {
@@ -199,41 +245,101 @@ struct Index {
       }
     }
   }
+
   // 百分比按钮点击处理
   handlePercentage(): void {
     if (this.hasError) {
       return
     }
 
-    const currentValue = parseFloat(this.displayValue)
-    const result = currentValue / 100
-    this.displayValue = this.formatNumber(result)
+    const currentValue = ComplexCalculator.parse(this.displayValue)
+    const result: Complex = {
+      real: currentValue.real / 100,
+      imag: currentValue.imag / 100
+    }
+    this.displayValue = ComplexCalculator.format(result)
   }
+
   // 正负号按钮点击处理
   handleToggleSign(): void {
     if (this.hasError) {
       return
     }
 
-    const currentValue = parseFloat(this.displayValue)
-    this.displayValue = this.formatNumber(-currentValue)
+    const currentValue = ComplexCalculator.parse(this.displayValue)
+    const result: Complex = {
+      real: -currentValue.real,
+      imag: -currentValue.imag
+    }
+    this.displayValue = ComplexCalculator.format(result)
+  }
+
+  // 虚数单位 'j' 按钮点击处理
+  handleImaginaryUnit(): void {
+    if (this.hasError) {
+      this.handleClear()
+    }
+
+    // 如果等待输入第二个操作数，直接显示虚数单位
+    if (this.waitingForSecondOperand) {
+      this.displayValue = 'j'
+      this.waitingForSecondOperand = false
+      return
+    }
+
+    // 如果当前是纯实数且没有虚数单位，添加虚数单位
+    if (!this.displayValue.includes('j')) {
+      const cleanValue = this.displayValue.trim()
+      // 移除前导的正号
+      const normalizedValue = cleanValue.startsWith('+') ? cleanValue.substring(1) : cleanValue
+
+      // 如果当前值是 "0" 或空，直接显示 "j"
+      if (normalizedValue === '0' || normalizedValue === '') {
+        this.displayValue = 'j'
+      } else {
+        // 否则在当前值后添加 "j"（自动处理符号）
+        this.displayValue = normalizedValue + 'j'
+      }
+    } else {
+      // 如果已经有虚数单位，解析并规范化显示
+      const currentComplex = ComplexCalculator.parse(this.displayValue)
+      this.displayValue = ComplexCalculator.format(currentComplex)
+    }
   }
 
   build() {
     Column() {
       // 显示区域
-      Row() {
+      Column() {
+        // 表达式显示（可选）
+        if (this.showExpression && this.expression !== '') {
+          Text(this.expression)
+            .fontSize($r('app.float.expression_font_size', 16))
+            .fontColor($r('app.color.expression_text', '#999999'))
+            .textAlign(TextAlign.End)
+            .maxLines(1)
+            .width('100%')
+            .margin({ bottom: 5 })
+        }
+
+        // 结果显示
         Text(this.displayValue)
           .fontSize($r('app.float.display_font_size'))
           .fontColor($r('app.color.display_text'))
           .textAlign(TextAlign.End)
           .maxLines(1)
-          .layoutWeight(1)
+          .width('100%')
       }
       .height('20%')
       .width('100%')
-      .padding({ left: 20, right: 20 })
+      .padding({
+        left: 20,
+        right: 20,
+        top: 10,
+        bottom: 10
+      })
       .backgroundColor($r('app.color.display_background'))
+      .justifyContent(FlexAlign.End)
 
       // 按钮区域
       Column() {
@@ -272,10 +378,12 @@ struct Index {
           this.CalculatorButton('+', 'operator', () => this.handleOperator('+'))
         }
         .layoutWeight(1)
+
         // 第五行：数字0、小数点和等号
         Row() {
           this.CalculatorButton('0', 'number', () => this.handleNumberInput('0'))
           this.CalculatorButton('.', 'number', () => this.handleDecimal())
+          this.CalculatorButton('j', 'operator', () => this.handleImaginaryUnit())
           this.CalculatorButton('=', 'operator', () => this.handleEquals())
         }
         .layoutWeight(1)
@@ -288,6 +396,7 @@ struct Index {
     .width('100%')
     .backgroundColor($r('app.color.calculator_background'))
   }
+
   @Builder
   CalculatorButton(label: string, type: string, onClick: () => void): void {
     Button(label) {
@@ -303,6 +412,7 @@ struct Index {
     .margin(5)
     .onClick(onClick)
   }
+
   // 获取按钮背景色
   getButtonBackgroundColor(type: string): ResourceColor {
     switch (type) {
@@ -316,6 +426,7 @@ struct Index {
         return $r('app.color.number_button')
     }
   }
+
   // 获取按钮文字颜色
   getButtonTextColor(type: string): ResourceColor {
     switch (type) {

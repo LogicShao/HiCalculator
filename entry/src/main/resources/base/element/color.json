@@ -39,6 +39,10 @@
     {
       "name": "function_button_text",
       "value": "#000000"
+    },
+    {
+      "name": "expression_text",
+      "value": "#999999"
     }
   ]
 }
