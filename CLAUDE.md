@@ -1,42 +1,59 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 变更记录 (Changelog)
 
-## 项目概述
+- **2025-12-03**: 更新项目架构文档，增加模块结构图和详细模块说明。
 
-这是一个基于 HarmonyOS 的 HiCalculator 计算器应用项目，使用 ArkTS 语言开发。
+## 项目愿景
 
-## 开发环境
+HiCalculator 是一个基于 HarmonyOS 的计算器应用，支持实数和复数运算，具备表达式求值功能。应用采用 ArkTS 语言开发，利用调度场算法处理运算符优先级，提供直观易用的用户界面。
+
+## 架构总览
+
+### ✨ 模块结构图
+
+```mermaid
+graph TD
+    A["(根) HiCalculator"] --> B["entry"];
+    B --> C["src"];
+    C --> D["main"];
+    C --> E["ohosTest"];
+    C --> F["test"];
+    D --> G["ets"];
+    G --> H["entryability"];
+    G --> I["entrybackupability"];
+    G --> J["pages"];
+    G --> K["utils"];
+
+    click B "./entry/CLAUDE.md" "查看 entry 模块文档"
+    click H "./entry/src/main/ets/entryability/CLAUDE.md" "查看 entryability 模块文档"
+    click I "./entry/src/main/ets/entrybackupability/CLAUDE.md" "查看 entrybackupability 模块文档"
+    click J "./entry/src/main/ets/pages/CLAUDE.md" "查看 pages 模块文档"
+    click K "./entry/src/main/ets/utils/CLAUDE.md" "查看 utils 模块文档"
+```
+
+### 模块索引
+
+| 模块路径 | 一句话职责 |
+|---------|------------|
+| [entry](./entry/CLAUDE.md) | 主模块，包含应用的主要功能实现 |
+| [entry/src/main/ets/entryability](./entry/src/main/ets/entryability/CLAUDE.md) | 应用入口能力 |
+| [entry/src/main/ets/entrybackupability](./entry/src/main/ets/entrybackupability/CLAUDE.md) | 应用备份能力 |
+| [entry/src/main/ets/pages](./entry/src/main/ets/pages/CLAUDE.md) | 页面组件 |
+| [entry/src/main/ets/utils](./entry/src/main/ets/utils/CLAUDE.md) | 工具类，包括复数计算和表达式求值 |
+
+## 运行与开发
+
+### 开发环境
 
 - **开发框架**: HarmonyOS
 - **编程语言**: ArkTS (TypeScript 的超集)
 - **构建工具**: Hvigor
 - **包管理器**: OHPM (OpenHarmony Package Manager)
 
-## 项目结构
+### 常用命令
 
-```
-HiCalculator/
-├── AppScope/                    # 应用级配置
-│   ├── app.json5               # 应用配置文件
-│   └── resources/              # 应用级资源文件
-├── entry/                      # 主模块
-│   ├── src/main/               # 主代码目录
-│   │   ├── ets/                # ArkTS 源代码
-│   │   │   ├── entryability/   # 应用入口能力
-│   │   │   └── pages/          # 页面组件
-│   │   ├── resources/          # 模块资源
-│   │   └── module.json5        # 模块配置
-│   ├── src/ohosTest/           # 系统测试
-│   └── src/test/               # 单元测试
-├── oh_modules/                 # OHPM 依赖包
-├── hvigor/                     # Hvigor 配置
-└── hvigorfile.ts               # 构建脚本
-```
-
-## 常用命令
-
-### 构建和运行
+#### 构建和运行
 ```bash
 # 构建项目
 hvigor assembleHap
@@ -45,43 +62,34 @@ hvigor assembleHap
 hvigor clean
 ```
 
-### 代码检查
+#### 代码检查
 ```bash
 # 运行代码检查
 hvigor lint
 ```
 
-### 测试
+#### 测试
 ```bash
 # 运行单元测试
 hvigor test
 ```
 
-## 核心文件说明
+## 测试策略
 
-### 配置文件
-- `AppScope/app.json5`: 应用级配置，包含包名、版本等信息
-- `entry/src/main/module.json5`: 模块配置，定义能力、页面路由等
-- `oh-package.json5`: 项目依赖配置
-- `hvigorfile.ts`: 构建配置
+项目使用 Hypium 测试框架进行单元测试，包含本地单元测试和系统测试。
 
-### 关键代码文件
-- `entry/src/main/ets/entryability/EntryAbility.ets`: 应用入口能力
-- `entry/src/main/ets/pages/Index.ets`: 主页面组件
-- `entry/src/main/resources/base/profile/main_pages.json`: 页面路由配置
+- **本地单元测试**: `entry/src/test/`
+- **系统测试**: `entry/src/ohosTest/`
 
-## 开发注意事项
+## 编码规范
 
-1. **ArkTS 语法**: 使用 TypeScript 语法，支持装饰器如 `@Entry`、`@Component`
-2. **UI 组件**: 使用 ArkUI 声明式语法，如 `Text`、`RelativeContainer`
-3. **资源引用**: 使用 `$r('app.float.page_text_font_size')` 格式引用资源
-4. **依赖管理**: 使用 OHPM 管理第三方依赖
-5. **测试框架**: 使用 Hypium 测试框架进行单元测试
+项目遵循 HarmonyOS 和 ArkTS 的编码规范，使用声明式 UI 语法，通过资源文件管理颜色、字体等界面元素。
 
-## 代码规范
+## AI 使用指引
 
-项目配置了代码检查规则，重点关注安全相关的加密算法使用，避免不安全的加密实现。
+当使用 AI 辅助开发时，请注意：
 
-## 扩展能力
-
-项目支持备份能力，通过 `EntryBackupAbility` 实现数据备份功能。
+1. 遵循现有代码风格和架构设计
+2. 保持复数计算和表达式求值的核心逻辑不变
+3. 注意资源引用格式和模块导入方式
+4. 确保新增功能与现有 UI 设计保持一致
